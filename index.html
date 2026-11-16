@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Day 14 – Form Validation</title>
+  <style>
+
+    /* ===== RESET ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #c2d1e7;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 15px;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: rgb(234, 207, 226);
+      border-radius: 12px;
+      padding: 35px 30px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    h2 { font-size: 22px; color: #1a1a2e; margin-bottom: 5px; }
+    .subtitle { font-size: 13px; color: #888; margin-bottom: 25px; }
+
+    /* ===== FORM FIELDS ===== */
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+
+    .field { margin-bottom: 16px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1.5px solid #ddd;
+      border-radius: 6px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus { border-color: #888; }
+
+    /* Validation States */
+    input.ok, select.ok { border-color: #1D9E75; }
+    input.err, select.err { border-color: #e94560; }
+
+    /* Error / Success Messages */
+    .msg {
+      font-size: 12px;
+      margin-top: 4px;
+      min-height: 16px;
+    }
+    .msg.ok  { color: #1D9E75; }
+    .msg.err { color: #e94560; }
+
+    /* ===== PASSWORD STRENGTH BAR ===== */
+    .strength-bar {
+      height: 5px;
+      background: #eee;
+      border-radius: 3px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .strength-fill {
+      height: 100%;
+      width: 0;
+      border-radius: 3px;
+      transition: width 0.3s, background 0.3s;
+    }
+
+    /* ===== TERMS ===== */
+    .terms {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 20px;
+    }
+    .terms input[type="checkbox"] { margin-top: 2px; cursor: pointer; }
+    .terms a { color: #e94560; text-decoration: none; }
+
+    /* ===== SUBMIT BUTTON ===== */
+    .submit-btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      background: #1a1a2e;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .submit-btn:hover { background: #2d2d4e; }
+
+    /* ===== SUCCESS BOX ===== */
+    .success-box {
+      display: none;
+      text-align: center;
+      padding: 30px 10px;
+    }
+    .success-icon { font-size: 50px; margin-bottom: 15px; }
+    .success-box h3 { font-size: 20px; color: #1a1a2e; margin-bottom: 8px; }
+    .success-box p  { font-size: 14px; color: #777; }
+
+    .reset-btn {
+      margin-top: 20px;
+      padding: 10px 25px;
+      background: #e94560;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .row { grid-template-columns: 1fr; }
+      .card { padding: 25px 18px; }
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- FORM AREA -->
+  <div id="form-area">
+    <h2>Create YourEmployee Account</h2>
+    <p class="subtitle">Validation runs as you type — all fields are required.</p>
+
+    <!-- Row: First + Last Name -->
+    <div class="row">
+      <div class="field">
+        <label for="fname">First Name</label>
+        <input type="text" id="fname" placeholder="e.g. sri" />
+        <p class="msg" id="fname-msg"></p>
+      </div>
+      <div class="field">
+        <label for="lname">Last Name</label>
+        <input type="text" id="lname" placeholder="e.g. kapoor" />
+        <p class="msg" id="lname-msg"></p>
+      </div>
+    </div>
+
+    <!-- Email -->
+    <div class="field">
+      <label for="email">Email Address</label>
+      <input type="text" id="email" placeholder="e.g. sri@example.com" />
+      <p class="msg" id="email-msg"></p>
+    </div>
+
+    <!-- Phone -->
+    <div class="field">
+      <label for="phone">Phone Number</label>
+      <input type="text" id="phone" placeholder="10-digit mobile number" maxlength="10" />
+      <p class="msg" id="phone-msg"></p>
+    </div>
+
+    <!-- Date of Birth -->
+    <div class="field">
+      <label for="dob">Date of Birth</label>
+      <input type="date" id="dob" />
+      <p class="msg" id="dob-msg"></p>
+    </div>
+
+    <!-- Department -->
+    <div class="field">
+      <label for="dept">Department</label>
+      <select id="dept">
+        <option value="">-- Select Department --</option>
+        <option>Engineering</option>
+        <option>Marketing</option>
+        <option>HR</option>
+        <option>Finance</option>
+        <option>Sales</option>
+      </select>
+      <p class="msg" id="dept-msg"></p>
+    </div>
+
+    <!-- Password -->
+    <div class="field">
+      <label for="pass">Password</label>
+      <input type="password" id="pass" placeholder="Min 8 chars, 1 number, 1 special char" />
+      <div class="strength-bar">
+        <div class="strength-fill" id="sfill"></div>
+      </div>
+      <p class="msg" id="pass-msg"></p>
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="field">
+      <label for="cpass">Confirm Password</label>
+      <input type="password" id="cpass" placeholder="Re-enter your password" />
+      <p class="msg" id="cpass-msg"></p>
+    </div>
+
+    <!-- Terms -->
+    <div class="terms">
+      <input type="checkbox" id="terms" />
+      <label for="terms">
+        I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>
+      </label>
+    </div>
+
+    <button class="submit-btn" onclick="submitForm()">Create Account</button>
+  </div>
+
+  <!-- SUCCESS BOX (hidden until form passes) -->
+  <div class="success-box" id="success-box">
+    <div class="success-icon">✅</div>
+    <h3>Account Created!</h3>
+    <p id="success-name"></p>
+    <p style="margin-top:6px; font-size:13px;">All validations passed successfully.</p>
+    <button class="reset-btn" onclick="resetForm()">Register Another</button>
+  </div>
+
+</div>
+
+<script>
+
+  // ===== HELPER: Set field state =====
+  function setField(id, isOk, message) {
+    const input = document.getElementById(id);
+    const msgEl = document.getElementById(id + '-msg');
+    input.className = isOk ? 'ok' : (message ? 'err' : '');
+    if (msgEl) {
+      msgEl.textContent = message;
+      msgEl.className = 'msg ' + (isOk ? 'ok' : (message ? 'err' : ''));
+    }
+    return isOk;
+  }
+
+  // ===== VALIDATE: Name fields =====
+  function validateName(id) {
+    const value = document.getElementById(id).value.trim();
+    if (!value)           return setField(id, false, 'This field is required');
+    if (value.length < 2) return setField(id, false, 'Too short — minimum 2 characters');
+    if (!/^[a-zA-Z\s]+$/.test(value)) return setField(id, false, 'Only letters are allowed');
+    return setField(id, true, 'Looks good!');
+  }
+
+  // ===== VALIDATE: Email =====
+  function validateEmail() {
+    const value = document.getElementById('email').value.trim();
+    if (!value) return setField('email', false, 'Email address is required');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+      return setField('email', false, 'Enter a valid email (e.g. name@domain.com)');
+    return setField('email', true, 'Valid email!');
+  }
+
+  // ===== VALIDATE: Phone =====
+  function validatePhone() {
+    const value = document.getElementById('phone').value.trim();
+    if (!value)               return setField('phone', false, 'Phone number is required');
+    if (!/^\d{10}$/.test(value)) return setField('phone', false, 'Enter exactly 10 digits');
+    return setField('phone', true, 'Valid phone number!');
+  }
+
+  // ===== VALIDATE: Date of Birth =====
+  function validateDob() {
+    const value = document.getElementById('dob').value;
+    if (!value) return setField('dob', false, 'Date of birth is required');
+    const ageInYears = (new Date() - new Date(value)) / (1000 * 60 * 60 * 24 * 365.25);
+    if (ageInYears < 18)  return setField('dob', false, 'You must be at least 18 years old');
+    if (ageInYears > 100) return setField('dob', false, 'Enter a valid date of birth');
+    return setField('dob', true, 'Age verified!');
+  }
+
+  // ===== VALIDATE: Department =====
+  function validateDept() {
+    const value = document.getElementById('dept').value;
+    const msgEl = document.getElementById('dept-msg');
+    const el    = document.getElementById('dept');
+    if (!value) {
+      el.className = 'err';
+      msgEl.textContent = 'Please select a department';
+      msgEl.className = 'msg err';
+      return false;
+    }
+    el.className = 'ok';
+    msgEl.textContent = '';
+    return true;
+  }
+
+  // ===== VALIDATE: Password + Strength Bar =====
+  function validatePass() {
+    const value = document.getElementById('pass').value;
+    const fill  = document.getElementById('sfill');
+    let score = 0;
+    if (value.length >= 8)        score++;
+    if (/[A-Z]/.test(value))      score++;
+    if (/[0-9]/.test(value))      score++;
+    if (/[^A-Za-z0-9]/.test(value)) score++;
+
+    // Update strength bar
+    const barColors = ['#e94560', '#EF9F27', '#1D9E75', '#1D9E75'];
+    const labels    = ['', 'Weak', 'Fair', 'Strong', 'Very Strong'];
+    fill.style.width      = (score * 25) + '%';
+    fill.style.background = barColors[score - 1] || '#e94560';
+
+    if (!value)         return setField('pass', false, 'Password is required');
+    if (value.length < 8) return setField('pass', false, 'Minimum 8 characters required');
+    if (score < 3)      return setField('pass', false, labels[score] + ' — add uppercase, numbers or symbols');
+    return setField('pass', true, labels[score] + ' password!');
+  }
+
+  // ===== VALIDATE: Confirm Password =====
+  function validateCpass() {
+    const pass  = document.getElementById('pass').value;
+    const cpass = document.getElementById('cpass').value;
+    if (!cpass)        return setField('cpass', false, 'Please confirm your password');
+    if (pass !== cpass) return setField('cpass', false, 'Passwords do not match');
+    return setField('cpass', true, 'Passwords match!');
+  }
+
+  // ===== LIVE VALIDATION (runs on every keystroke) =====
+  document.getElementById('fname').addEventListener('input',  () => validateName('fname'));
+  document.getElementById('lname').addEventListener('input',  () => validateName('lname'));
+  document.getElementById('email').addEventListener('input',  validateEmail);
+  document.getElementById('phone').addEventListener('input',  validatePhone);
+  document.getElementById('dob').addEventListener('change',   validateDob);
+  document.getElementById('dept').addEventListener('change',  validateDept);
+  document.getElementById('pass').addEventListener('input',   () => {
+    validatePass();
+    if (document.getElementById('cpass').value) validateCpass(); // re-check confirm field too
+  });
+  document.getElementById('cpass').addEventListener('input',  validateCpass);
+
+  // ===== SUBMIT: Check all fields together =====
+  function submitForm() {
+    const allValid = [
+      validateName('fname'),
+      validateName('lname'),
+      validateEmail(),
+      validatePhone(),
+      validateDob(),
+      validateDept(),
+      validatePass(),
+      validateCpass()
+    ];
+
+    if (!document.getElementById('terms').checked) {
+      alert('Please accept the Terms & Conditions to continue.');
+      return;
+    }
+
+    if (allValid.every(Boolean)) {
+      // All passed — show success
+      document.getElementById('form-area').style.display = 'none';
+      document.getElementById('success-box').style.display = 'block';
+      const first = document.getElementById('fname').value.trim();
+      const last  = document.getElementById('lname').value.trim();
+      document.getElementById('success-name').textContent = 'Welcome, ' + first + ' ' + last + '!';
+    }
+  }
+
+  // ===== RESET FORM =====
+  function resetForm() {
+    document.getElementById('form-area').style.display  = 'block';
+    document.getElementById('success-box').style.display = 'none';
+
+    ['fname', 'lname', 'email', 'phone', 'pass', 'cpass'].forEach(id => {
+      document.getElementById(id).value     = '';
+      document.getElementById(id).className = '';
+      document.getElementById(id + '-msg').textContent = '';
+    });
+    document.getElementById('dob').value  = '';
+    document.getElementById('dept').value = '';
+    document.getElementById('terms').checked = false;
+    document.getElementById('sfill').style.width = '0';
+  }
+
+</script>
+
+</body>
+</html>
